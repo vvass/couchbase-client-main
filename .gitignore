@@ -1,0 +1,46 @@
+<<<<<<< HEAD
+logs
+project/project
+project/target
+target
+tmp
+.history
+dist
+.idea
+*.iml
+*.gz
+*.ipr
+*.iws
+/out
+/.idea_modules
+/.classpath
+/.project
+/RUNNING_PID
+/.settings
+.DS_Store
+.cache
+.classpath
+.project
+.target
+bin/
+.settings
+/repository
+=======
+*.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+>>>>>>> c958925fc4a4988aa71dcb9c11cddc163379c42d
