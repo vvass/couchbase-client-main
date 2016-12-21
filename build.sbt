@@ -3,7 +3,7 @@ import sbt.Level
 
 lazy val commonSettings = Seq(
   organization  := "44lab5",
-  version       := "1.0",
+  version       := "1.1",
   scalaVersion  := "2.11.8"
 )
 
@@ -11,7 +11,7 @@ lazy val root = (project in file(".")).
   enablePlugins(PlayScala, UniversalPlugin, DockerPlugin).
   settings(commonSettings: _*).
   settings(
-    name      := "couchbase-client2",
+    name      := "couchbase-client-main",
     logLevel  := Level.Info
   )
 

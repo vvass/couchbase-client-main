@@ -14,9 +14,6 @@ import views.html.helper.select
 import scala.collection.mutable.ArrayBuffer
 import java.net.URI
 
-import scala.util.Try
-
-
 /**
   * Created by vvass on 6/3/16.
   */

@@ -28,7 +28,7 @@ class CouchbaseQueryController extends Controller {
     */
     val results = new StringBuilder
     for (word <- requestList if word.length > 3) {
-      if (word.matches("^[a-zA-Z0-9]*$"))
+      if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
         results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
     }
 
