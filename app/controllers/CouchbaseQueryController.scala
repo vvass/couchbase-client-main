@@ -2,6 +2,7 @@ package controllers
 
 import com.couchbase.client.java.CouchbaseCluster
 import datasources.CouchbaseDatasourceObject
+import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
 
 /**
@@ -16,6 +17,8 @@ class CouchbaseQueryController extends Controller {
 
   def getDocument = Action(parse.anyContent) { request =>
 
+    val results = new StringBuilder
+
     /* We want to create a list of of words inside of the request so that we can
     ** query each one individually.
     */
@@ -26,7 +29,7 @@ class CouchbaseQueryController extends Controller {
     ** to the query for couchbase. Also this will make sure that only english text
     ** is processed.
     */
-    val results = new StringBuilder
+
     for (word <- requestList if word.length > 3) {
       if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
         results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
@@ -37,7 +40,7 @@ class CouchbaseQueryController extends Controller {
     if (results.isEmpty)
       NoContent
     else
-      Ok("result: " + results + "\n" + requestList)
+      Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
   }
 
   def oldGetDocument = Action(parse.anyContent) { request =>
