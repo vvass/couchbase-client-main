@@ -38,7 +38,7 @@ class CouchbaseQueryController extends Controller {
     // TODO make sure primary has a check if null
     // TODO make sure primary has a check if not around
     if (results.isEmpty)
-      NoContent
+      Ok(Json.obj("status" -> "KO", "results" -> Json.parse(results.toString())))
     else
       Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
   }
