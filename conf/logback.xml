@@ -28,13 +28,26 @@
         </encoder>
     </appender>
 
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- See http://logback.qos.ch/manual/layouts.html -->
+            <pattern>%date{HH:mm:ss} %-5level[%.15thread] [%-25logger{15}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.mlh.spraysample" level="INFO" additivity="false">
+        <appender-ref ref="console" />
+    </logger>
+
     <!-- additivity=false ensures access log data only goes to the access log -->
     <logger name="access" level="INFO" additivity="false">
-        <appender-ref ref="ACCESS_FILE" />
+        <!--<appender-ref ref="ACCESS_FILE" />-->
+        <appender-ref ref="console" />
     </logger>
 
     <root level="INFO">
-        <appender-ref ref="FILE"/>
+        <!--<appender-ref ref="FILE"/>-->
+        <appender-ref ref="console"/>
     </root>
 
 </configuration>

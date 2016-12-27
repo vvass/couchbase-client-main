@@ -2,7 +2,7 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Home page
+# Couchbase client routes or endpoints to retrieve info from couchbase server storage
 GET       /index  controllers.BasicController.index
 GET       /getDoc  controllers.CouchbaseQueryController.getDocument
 GET       /oldgGetDoc  controllers.CouchbaseQueryController.oldGetDocument

@@ -1,7 +1,7 @@
 package controllers
 
-import com.couchbase.client.java.CouchbaseCluster
 import datasources.CouchbaseDatasourceObject
+import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
 
@@ -9,7 +9,9 @@ import play.api.mvc.{Action, Controller}
   * Created by vvass on 6/3/16.
   */
 class CouchbaseQueryController extends Controller {
-
+  
+  
+  val logger = LoggerFactory.getLogger(classOf[CouchbaseQueryController])
 
   /**
     * The connection to the cluster.
@@ -30,17 +32,21 @@ class CouchbaseQueryController extends Controller {
     ** is processed.
     */
 
-    for (word <- requestList if word.length > 3) {
+    for (word <- requestList if word.length > 3) { // TODO put this length in config
       if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
         results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
     }
 
     // TODO make sure primary has a check if null
     // TODO make sure primary has a check if not around
-    if (results.isEmpty)
+    if (results.isEmpty) {
+      logger.info("KO" + " None")
       Ok(Json.obj("status" -> "KO", "results" -> "None"))
-    else
+    }
+    else {
+      logger.info("OK"+results.toString)
       Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
+    }
   }
 
   def oldGetDocument = Action(parse.anyContent) { request =>
