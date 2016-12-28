@@ -10,14 +10,14 @@ import org.slf4j.LoggerFactory
 import twitter4j.{Status, StatusUpdate}
 
 
-sealed trait TweetResponseTrait {
+sealed trait TweetUtilityTrait {
   def toOption: Option[Any] // TODO we might need to modify this or get rid of it
   def getStatus: String
   def getOurId: Long
   def statusUpdate: StatusUpdate
 }
 
-object SendTweetResponse {
+object TweetResponseUtility {
   
   /** This Authorizes the client and init a twitter object so that we can call
       the twitter4j APIs
@@ -27,12 +27,12 @@ object SendTweetResponse {
   
 }
 
-class SendTweetResponse(id: Long, text: String) extends TweetResponseTrait {
-  import SendTweetResponse._
+class TweetResponseUtility(id: Long, text: String) extends TweetUtilityTrait {
+  import TweetResponseUtility._
   
-  lazy val logger = LoggerFactory.getLogger(classOf[SendTweetResponse])
+  lazy val logger = LoggerFactory.getLogger(classOf[TweetResponseUtility])
   
-  logger.info("Class called") // TODO add this to configuration
+  logger.debug("Class called") // TODO add this to configuration
   private val tweetId = id
   private val tweetText = text
   

@@ -1,6 +1,7 @@
 package controllers
 
 import datasources.CouchbaseDatasourceObject
+import models.TweetResponseUtility
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
@@ -40,25 +41,60 @@ class CouchbaseQueryController extends Controller {
     // TODO make sure primary has a check if null
     // TODO make sure primary has a check if not around
     if (results.isEmpty) {
-      logger.info("KO" + " None")
+      logger.debug("KO" + " None")
       Ok(Json.obj("status" -> "KO", "results" -> "None"))
     }
     else if(false) { // TODO we need this to be in a configuration
-      logger.info("OK"+results.toString)
+      logger.debug("OK"+results.toString)
       Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
     }
     else {
-      logger.info("OK" + "Found Something") // TODO we need a configuration
+      logger.debug("OK" + "Found Something") // TODO we need a configuration
       Ok(Json.obj("status" -> "OK", "results" -> "Found Something --> Processing"))
     }
   }
 
-  def oldGetDocument = Action(parse.anyContent) { request => // TODO remove this
-
-    def primaryWord = request.queryString.getOrElse("primary",null)(0).toString
-    def results = CouchbaseDatasourceObject.queryDocByString(primaryWord)
-
-    Ok("Got request [" + request + "] [result: " + results +"]")
+  def newGetDoc(id: Long, text: String) = Action {
+    // TODO encrypt the id for twitter
+    
+    logger.debug("Entering oldGetDocument Twitter") // TODO this needs to be in configuration
+  
+    val results = new StringBuilder
+    
+    def requestList = text.toString.split(" +")
+  
+    /* We don't want to parse words that are less then 3 letters long. It is useless.
+    ** This is where we parse out the string from the request in order to send it
+    ** to the query for couchbase. Also this will make sure that only english text
+    ** is processed.
+    */
+  
+    for (word <- requestList if word.length > 3) { // TODO put this length in config
+      if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
+        results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
+    }
+  
+    // TODO make sure primary has a check if null
+    // TODO make sure primary has a check if not around
+    if (results.isEmpty) {
+      logger.debug("KO" + " Nothing found") // TODO we need a configuration
+      Ok(Json.obj("status" -> "KO", "results" -> "None"))
+    }
+    else if(false) { // TODO we need this to be in a configuration
+      logger.debug("OK" + results.toString) // TODO we need a configuration
+      Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
+    }
+    else {
+      logger.debug("OK" + "Found Something") // TODO we need a configuration
+      val responseAPI = new TweetResponseUtility(id,text) // TODO Need to be called once, maybe move to object
+      // TODO we all need a way to handle exceptions if there is denial from Twitter
+      responseAPI.send
+      Ok(Json.obj("status" -> "OK", "results" -> "Found Something --> Processing"))
+    }
+  
+  
+    
+    
   }
 
 }

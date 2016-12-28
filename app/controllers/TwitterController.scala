@@ -1,7 +1,7 @@
 package controllers
 
 import datasources.TwitterAuthorization
-import models.SendTweetResponse
+import models.TweetResponseUtility
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
@@ -19,9 +19,9 @@ class TwitterController extends Controller {
     
     // TODO encrypt the id for twitter
   
-    logger.info("Entering response Twitter") // TODO this needs to be in configuration
+    logger.debug("Entering response Twitter") // TODO this needs to be in configuration
   
-    val responseAPI = new SendTweetResponse(id,text) // TODO Need to be called once, maybe move to object
+    val responseAPI = new TweetResponseUtility(id,text) // TODO Need to be called once, maybe move to object
     // TODO we all need a way to handle exceptions if there is denial from Twitter
     
     responseAPI.send

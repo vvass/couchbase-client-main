@@ -17,7 +17,7 @@ private object TwitterAuthorization {
   
   private def client(): Twitter = {
     lazy val logger = LoggerFactory.getLogger(classOf[TwitterAuthorization])
-    logger.info("Object initilized and auth keys processed") // TODO add this to configuration
+    logger.debug("Object initilized and auth keys processed") // TODO add this to configuration
   
     val configBuilder = new ConfigurationBuilder()
   
@@ -38,7 +38,7 @@ class TwitterAuthorization() {
   
   lazy val logger = LoggerFactory.getLogger(classOf[TwitterAuthorization])
   
-  logger.info("Class called") // TODO add this to configuration
+  logger.debug("Class called") // TODO add this to configuration
   
   def getClientAPI: Twitter = client()
 }
