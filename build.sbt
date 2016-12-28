@@ -25,11 +25,17 @@ libraryDependencies ++= {
   val iospray = "1.3.3"
 
   Seq(
+    // -- main library
     "com.couchbase.client".%("java-client")                         % "2.2.7",
+    // -- metrics --
     "io.dropwizard.metrics".%("metrics-core")                       % "3.1.2",
     // -- package plugin --
     "javax.servlet".%("javax.servlet-api")                          % "3.0.1"         % "provided",
-    "com.spotify".%("docker-client")                                % "5.0.2"
+    // -- docker --
+    "com.spotify".%("docker-client")                                % "5.0.2",
+    // -- twitter --
+    "org.twitter4j".%("twitter4j-core")                             % "4.0.5"
+    
   )
 }
 

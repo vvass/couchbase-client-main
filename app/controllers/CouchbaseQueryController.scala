@@ -43,13 +43,17 @@ class CouchbaseQueryController extends Controller {
       logger.info("KO" + " None")
       Ok(Json.obj("status" -> "KO", "results" -> "None"))
     }
-    else {
+    else if(false) { // TODO we need this to be in a configuration
       logger.info("OK"+results.toString)
       Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
     }
+    else {
+      logger.info("OK" + "Found Something") // TODO we need a configuration
+      Ok(Json.obj("status" -> "OK", "results" -> "Found Something --> Processing"))
+    }
   }
 
-  def oldGetDocument = Action(parse.anyContent) { request =>
+  def oldGetDocument = Action(parse.anyContent) { request => // TODO remove this
 
     def primaryWord = request.queryString.getOrElse("primary",null)(0).toString
     def results = CouchbaseDatasourceObject.queryDocByString(primaryWord)
