@@ -5,6 +5,8 @@ import models.TweetResponseUtility
 import org.slf4j.LoggerFactory
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
+import play.utils.UriEncoding
+import java.nio.charset.{StandardCharsets => SC}
 
 /**
   * Created by vvass on 6/3/16.
@@ -54,7 +56,7 @@ class CouchbaseQueryController extends Controller {
     }
   }
 
-  def newGetDoc(id: Long, text: String) = Action {
+  def newGetDoc(id: Long, screenName: String, text: String) = Action {
     // TODO encrypt the id for twitter
     
     logger.debug("Entering oldGetDocument Twitter") // TODO this needs to be in configuration
@@ -80,16 +82,17 @@ class CouchbaseQueryController extends Controller {
       logger.debug("KO" + " Nothing found") // TODO we need a configuration
       Ok(Json.obj("status" -> "KO", "results" -> "None"))
     }
-    else if(false) { // TODO we need this to be in a configuration
+    else if(true) { // TODO we need this to be in a configuration
       logger.debug("OK" + results.toString) // TODO we need a configuration
-      Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
+      Ok(Json.obj("status" -> "OK", "screenname" -> screenName, "results" -> results.toString))
     }
     else {
       logger.debug("OK" + "Found Something") // TODO we need a configuration
-      val responseAPI = new TweetResponseUtility(id,text) // TODO Need to be called once, maybe move to object
+      val responseText = Json.parse(results.toString())
+      val responseAPI = new TweetResponseUtility(id, screenName, text, responseText) // TODO Need to be called once, maybe move to object
       // TODO we all need a way to handle exceptions if there is denial from Twitter
       responseAPI.send
-      Ok(Json.obj("status" -> "OK", "results" -> "Found Something --> Processing"))
+      Ok(Json.obj("status" -> "OK", "screenname" -> screenName, "sent_screenname" -> responseAPI.getOurScreenName, "results" -> results.toString))
     }
   
   

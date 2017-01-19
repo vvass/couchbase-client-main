@@ -21,12 +21,12 @@ class TwitterController extends Controller {
   
     logger.debug("Entering response Twitter") // TODO this needs to be in configuration
   
-    val responseAPI = new TweetResponseUtility(id,text) // TODO Need to be called once, maybe move to object
-    // TODO we all need a way to handle exceptions if there is denial from Twitter
-    
-    responseAPI.send
+//    val responseAPI = new TweetResponseUtility(id,text) // TODO Need to be called once, maybe move to object
+//    // TODO we all need a way to handle exceptions if there is denial from Twitter
+//
+//    responseAPI.send
       
-    Ok(  responseAPI.getId.toString )
+    Ok(  "Yo")
     
     
   }
