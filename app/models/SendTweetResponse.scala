@@ -28,27 +28,23 @@ object TweetResponseUtility {
   
 }
 
-class TweetResponseUtility(id: Long, screenName: String, text: String, responseText: JsValue) extends TweetUtilityTrait {
+class TweetResponseUtility(tweet: Tweet, responseText: JsValue) extends TweetUtilityTrait {
   import TweetResponseUtility._
   
   lazy val logger = LoggerFactory.getLogger(classOf[TweetResponseUtility])
   
   logger.debug("Class called") // TODO add this to configuration / Also make sure the val are declared in the param field above
-  private val tweetId = id //710064201293811712L
-  private val tweetText = text
-  private val tweetScreenName = screenName
-  private val tweetResponseText = (responseText \\ "response")map(_.as[JsValue])
   
   implicit def toOption = Some(this)
   private def twitterAPI = api.getClientAPI
+  
   // TODO we need to add comments to these defs
-  def getId = tweetId
-  def getResponseText = tweetResponseText
-  def getOurScreenName = tweetScreenName
+  def getId = tweet.id
+  def getResponseText = (responseText \\ "response")map(_.as[String])
+  def getOurScreenName = tweet.user
   def getOurId = twitterAPI.getId
   def currentTweetId = twitterAPI.getHomeTimeline // Useful for get top tweets and the tweet id
-  def statusUpdate = new StatusUpdate("@" + tweetScreenName + " " + tweetResponseText(0)) // first element found in the recursion(\\) of "response"
-  def send: Status = twitterAPI.updateStatus(statusUpdate.inReplyToStatusId(id))
-//  def getStatus: String = send.toString // TODO we need something here if send doesnt work or is none
+  def statusUpdate = new StatusUpdate("@" + tweet.user + " " + getResponseText(0)) // first element found in the recursion(\\) of "response"
+  def send: Status = twitterAPI.updateStatus(statusUpdate.inReplyToStatusId(tweet.id))
   
 }

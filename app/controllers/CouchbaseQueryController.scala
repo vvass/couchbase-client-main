@@ -1,103 +1,117 @@
 package controllers
 
+import java.net.{DatagramPacket, DatagramSocket, InetAddress, InetSocketAddress}
+import java.nio.charset.{StandardCharsets => SC}
+import javax.inject.Inject
+import javax.smartcardio.ResponseAPDU
+
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.io.{IO, Udp}
+import akka.stream.Materializer
+import akka.util.ByteString
 import datasources.CouchbaseDatasourceObject
+import exceptions.PacketLenghtOutOfBounds
 import models.TweetResponseUtility
 import org.slf4j.LoggerFactory
-import play.api.libs.json.Json
+import play.api.Logger
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
-import play.utils.UriEncoding
-import java.nio.charset.{StandardCharsets => SC}
 
-/**
-  * Created by vvass on 6/3/16.
-  */
-class CouchbaseQueryController extends Controller {
-  
+case object Start
+
+class CouchbaseQueryController @Inject()(implicit system: ActorSystem, materializer: Materializer) extends Controller {
   
   val logger = LoggerFactory.getLogger(classOf[CouchbaseQueryController])
-
+  
   /**
     * The connection to the cluster.
     */
-
-  def getDocument = Action(parse.anyContent) { request =>
-
-    val results = new StringBuilder
-
-    /* We want to create a list of of words inside of the request so that we can
-    ** query each one individually.
-    */
-    def requestList = request.queryString.getOrElse("primary",null)(0).toString.split(" +")
-
-    /* We don't want to parse words that are less then 3 letters long. It is useless.
-    ** This is where we parse out the string from the request in order to send it
-    ** to the query for couchbase. Also this will make sure that only english text
-    ** is processed.
-    */
-
-    for (word <- requestList if word.length > 3) { // TODO put this length in config
-      if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
-        results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
-    }
-
-    // TODO make sure primary has a check if null
-    // TODO make sure primary has a check if not around
-    if (results.isEmpty) {
-      logger.debug("KO" + " None")
-      Ok(Json.obj("status" -> "KO", "results" -> "None"))
-    }
-    else if(false) { // TODO we need this to be in a configuration
-      logger.debug("OK"+results.toString)
-      Ok(Json.obj("status" -> "OK", "results" -> Json.parse(results.toString())))
-    }
-    else {
-      logger.debug("OK" + "Found Something") // TODO we need a configuration
-      Ok(Json.obj("status" -> "OK", "results" -> "Found Something --> Processing"))
-    }
+  def getDocument = Action {
+    val address = new InetSocketAddress("localhost", 0)
+    val system = ActorSystem("example")
+    val listener = system.actorOf(Props[DataGramSocketListener], "DataGramSocket")
+    
+    listener ! Start
+    
+    Ok("You have started couch client") // We need some nicer print out here in views
   }
-
-  def newGetDoc(id: Long, screenName: String, text: String) = Action {
-    // TODO encrypt the id for twitter
-    
-    logger.debug("Entering oldGetDocument Twitter") // TODO this needs to be in configuration
-  
-    val results = new StringBuilder
-    
-    def requestList = text.toString.split(" +")
-  
-    /* We don't want to parse words that are less then 3 letters long. It is useless.
-    ** This is where we parse out the string from the request in order to send it
-    ** to the query for couchbase. Also this will make sure that only english text
-    ** is processed.
-    */
-  
-    for (word <- requestList if word.length > 3) { // TODO put this length in config
-      if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
-        results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
-    }
-  
-    // TODO make sure primary has a check if null
-    // TODO make sure primary has a check if not around
-    if (results.isEmpty) {
-      logger.debug("KO" + " Nothing found") // TODO we need a configuration
-      Ok(Json.obj("status" -> "KO", "results" -> "None"))
-    }
-    else if(true) { // TODO we need this to be in a configuration
-      logger.debug("OK" + results.toString) // TODO we need a configuration
-      Ok(Json.obj("status" -> "OK", "screenname" -> screenName, "results" -> results.toString))
-    }
-    else {
-      logger.debug("OK" + "Found Something") // TODO we need a configuration
-      val responseText = Json.parse(results.toString())
-      val responseAPI = new TweetResponseUtility(id, screenName, text, responseText) // TODO Need to be called once, maybe move to object
-      // TODO we all need a way to handle exceptions if there is denial from Twitter
-      responseAPI.send
-      Ok(Json.obj("status" -> "OK", "screenname" -> screenName, "sent_screenname" -> responseAPI.getOurScreenName, "results" -> results.toString))
-    }
-  
-  
-    
-    
-  }
-
 }
+
+class DataGramSocketListener extends Actor {
+  
+  import models.Tweet
+  
+  def receive = {
+    case Start => {
+      val socket = new DatagramSocket(8136, InetAddress.getByName("127.0.0.1")) // TODO configure
+      
+      socket.setBroadcast(true)
+      while (true) {
+        
+        val bufferSize = 500 // TODO add to con figuration
+        
+        val receiveBuffer = Array.fill(bufferSize){0.toByte}
+        val packet = new DatagramPacket(receiveBuffer, receiveBuffer.length)
+        socket.receive(packet)
+  
+        /**
+          * This will throw an error if the amount of bytes returned exceed the amount
+          * allocated for receiveBuffer
+          */
+        if (bufferSize < packet.getLength) { throw new PacketLenghtOutOfBounds }
+        // TODO send back notice to end service and close the connection. Tell scrubber to end
+        
+        /**
+          * There is extra bytes in the packet space. We originally designated by bufferSize.
+          * This code makes sure we strip the extra content according to the length of the
+          * packet. That way when convert to JSON it will not have /0000u bytes at the end.
+          */
+        val str: String = new java.lang.String(packet.getData(), packet.getOffset, packet.getLength)
+        
+        val packetAsJson: JsValue = Json.parse(str)
+        queryCouchbaseServer(packetAsJson)
+        
+      }
+  
+    }
+  }
+  
+  def queryCouchbaseServer(json: JsValue) = {
+    
+    val tweet = Tweet(
+      (json \ "id_str").as[Long],
+      (json \ "text").as[String],
+        (json \ "screen_name").as[String]
+    )
+    
+    val results = new StringBuilder
+  
+    // Split up tokens by white space
+    def requestList = tweet.text.toString.split(" +")
+  
+    for (word <- requestList if word.length > 3) { // TODO put this length in config
+      if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
+        results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
+    }
+        
+    if(!results.isEmpty) sendResponseToUser(tweet, results)
+    
+    // Clean up StringBuilder so we are not taking up space
+    results.clear()
+  }
+  
+  def sendResponseToUser(tweet: Tweet, results: StringBuilder) = {
+    
+    val responseAPI = new TweetResponseUtility(tweet, Json.parse(results.toString())) // TODO Need to be called once, maybe move to object
+    // TODO we all need a way to handle exceptions if there is denial from Twitter
+  
+    Logger.info(responseAPI.getResponseText.toString())
+  
+    if(false) responseAPI.send // TODO add config
+    
+    // Clean up StringBuilder so we are not taking up space
+    results.clear()
+  }
+  
+}
+

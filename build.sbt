@@ -8,7 +8,8 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root = (project in file(".")).
-  enablePlugins(PlayScala, UniversalPlugin, DockerPlugin).
+  enablePlugins(PlayScala, UniversalPlugin, DockerPlugin, PlayAkkaHttpServer).
+  disablePlugins(PlayNettyServer).
   settings(commonSettings: _*).
   settings(
     name      := "couchbase-client-main",
@@ -38,5 +39,14 @@ libraryDependencies ++= {
     
   )
 }
+
+//Settings for docker publish plugin
+dockerExposedPorts := Seq(8135, 8135)
+
+parallelExecution in run := true
+fork in run := false
+
+//This is where we set the port that we will use for the application
+PlayKeys.devSettings := Seq("play.server.http.port" -> "8135")
 
 
