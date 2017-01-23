@@ -38,8 +38,9 @@ class CouchbaseQueryController @Inject()(implicit system: ActorSystem, materiali
 }
 
 class DataGramSocketListener extends Actor {
-  
   import models.Tweet
+  
+  val logger = LoggerFactory.getLogger(classOf[DataGramSocketListener])
   
   def receive = {
     case Start => {
@@ -105,7 +106,7 @@ class DataGramSocketListener extends Actor {
     val responseAPI = new TweetResponseUtility(tweet, Json.parse(results.toString())) // TODO Need to be called once, maybe move to object
     // TODO we all need a way to handle exceptions if there is denial from Twitter
   
-    Logger.info(responseAPI.getResponseText(0).toString())
+    logger.debug(responseAPI.getResponseText(0).toString())
   
     if(false) responseAPI.send // TODO add config
     

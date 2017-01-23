@@ -3,7 +3,7 @@ import sbt.Level
 
 lazy val commonSettings = Seq(
   organization  := "44lab5",
-  version       := "1.3",
+  version       := "2.0",
   scalaVersion  := "2.11.8"
 )
 
