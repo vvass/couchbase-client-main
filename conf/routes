@@ -6,5 +6,5 @@
 GET       /index  controllers.TwitterController.index
 GET       /postResponse/:id/:text  controllers.TwitterController.postResponse(id: Long, text: String)
 GET       /getDoc  controllers.CouchbaseQueryController.getDocument
-GET       /newGetDoc/:id/:screenName/:text  controllers.CouchbaseQueryController.newGetDoc(id: Long, screenName: String, text: String)
+#GET       /newGetDoc/:id/:screenName/:text  controllers.CouchbaseQueryController.newGetDoc(id: Long, screenName: String, text: String)
 

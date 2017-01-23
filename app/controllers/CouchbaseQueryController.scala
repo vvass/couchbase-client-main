@@ -105,7 +105,7 @@ class DataGramSocketListener extends Actor {
     val responseAPI = new TweetResponseUtility(tweet, Json.parse(results.toString())) // TODO Need to be called once, maybe move to object
     // TODO we all need a way to handle exceptions if there is denial from Twitter
   
-    Logger.info(responseAPI.getResponseText.toString())
+    Logger.info(responseAPI.getResponseText(0).toString())
   
     if(false) responseAPI.send // TODO add config
     
