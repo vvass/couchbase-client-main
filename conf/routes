@@ -3,8 +3,7 @@
 # ~~~~
 
 # Couchbase client routes or endpoints to retrieve info from couchbase server storage
-GET       /index  controllers.TwitterController.index
-GET       /postResponse/:id/:text  controllers.TwitterController.postResponse(id: Long, text: String)
-GET       /getDoc  controllers.CouchbaseQueryController.getDocument
+GET       /getDoc  controllers.CouchbaseQueryControllerImp.getDocument
 #GET       /newGetDoc/:id/:screenName/:text  controllers.CouchbaseQueryController.newGetDoc(id: Long, screenName: String, text: String)
+
 

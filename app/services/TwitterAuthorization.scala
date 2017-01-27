@@ -1,15 +1,15 @@
-package datasources
+package services
 
 import org.slf4j.LoggerFactory
-import twitter4j.{Twitter, TwitterFactory}
 import twitter4j.conf.ConfigurationBuilder
+import twitter4j.{Twitter, TwitterFactory}
 /**
   * Created by vvass on 12/27/16.
   */
 
 private object TwitterAuthorization {
   
-  // TODO need to move this to configuration, add second level of encryption and security
+  // TODO 2 need to move this to configuration, add second level of encryption and security
   private val api_key = "bgzvkOLbYmcw22uBkyV2gNVGQ"
   private val api_secret = "aFvEvKrwULWDUaPM6XDCk4z3M7rKDLkaa41HhPPXUaAyPpC2d1"
   private val access_token = "710064201293811712-HiPNCvhCCRGuO1ZnmxTSJ1V4b7sv8dK"
@@ -17,7 +17,7 @@ private object TwitterAuthorization {
   
   private def client(): Twitter = {
     lazy val logger = LoggerFactory.getLogger(classOf[TwitterAuthorization])
-    logger.debug("Object initilized and auth keys processed") // TODO add this to configuration
+    logger.debug("TwitterAuthorization initilized and auth keys processed")
   
     val configBuilder = new ConfigurationBuilder()
   
@@ -38,7 +38,7 @@ class TwitterAuthorization() {
   
   lazy val logger = LoggerFactory.getLogger(classOf[TwitterAuthorization])
   
-  logger.debug("Class called") // TODO add this to configuration
+  logger.debug("TwitterAuthorization is Initialized")
   
   def getClientAPI: Twitter = client()
 }

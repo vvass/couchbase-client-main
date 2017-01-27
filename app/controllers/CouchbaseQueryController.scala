@@ -9,27 +9,41 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.io.{IO, Udp}
 import akka.stream.Materializer
 import akka.util.ByteString
+import com.google.inject.ImplementedBy
+import configurations.CouchbaseQueryControllerConfiguration
 import datasources.CouchbaseDatasourceObject
 import exceptions.PacketLenghtOutOfBounds
-import models.TweetResponseUtility
 import org.slf4j.LoggerFactory
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
+import services.TweetResponseUtility
 
 case object Start
 
-class CouchbaseQueryController @Inject()(implicit system: ActorSystem, materializer: Materializer) extends Controller {
+@ImplementedBy(classOf[CouchbaseQueryControllerImp])
+trait CouchbaseQueryTrait {
+  val inetAddress: String
+  val socketPort: Int
+  val broadcast: Boolean
+  val listen: Boolean
+  val bufferSize: Int
+  val matchPattern: String
+  val wordLength: Int
+  val allowResponses: Boolean
+}
+
+class CouchbaseQueryControllerImp @Inject()(implicit system: ActorSystem, materializer: Materializer, config: CouchbaseQueryControllerConfiguration)
+  extends Controller {
   
-  val logger = LoggerFactory.getLogger(classOf[CouchbaseQueryController])
+  val logger = LoggerFactory.getLogger(classOf[CouchbaseQueryControllerImp])
   
   /**
     * The connection to the cluster.
     */
   def getDocument = Action {
-    val address = new InetSocketAddress("localhost", 0)
     val system = ActorSystem("example")
-    val listener = system.actorOf(Props[DataGramSocketListener], "DataGramSocket")
+    val listener = system.actorOf(Props(new DataGramSocketListener(config)), "DataGramSocket")
     
     listener ! Start
     
@@ -37,19 +51,29 @@ class CouchbaseQueryController @Inject()(implicit system: ActorSystem, materiali
   }
 }
 
-class DataGramSocketListener extends Actor {
+class DataGramSocketListener @Inject()(config: CouchbaseQueryControllerConfiguration)
+  extends Actor with CouchbaseQueryTrait {
   import models.Tweet
   
   val logger = LoggerFactory.getLogger(classOf[DataGramSocketListener])
   
+  // -- Configs --
+  override val inetAddress = this.config.inetAddress
+  override val socketPort = this.config.socketPort
+  override val broadcast = this.config.broadcast
+  override val listen = this.config.listen
+  override val bufferSize = this.config.bufferSize
+  override val matchPattern = this.config.matchPattern
+  override val wordLength = this.config.wordLength
+  override val allowResponses = this.config.allowResponses
+  // -- End of Configs --
+  
   def receive = {
     case Start => {
-      val socket = new DatagramSocket(8136, InetAddress.getByName("127.0.0.1")) // TODO configure
+      val socket = new DatagramSocket(socketPort, InetAddress.getByName(inetAddress))
       
-      socket.setBroadcast(true)
-      while (true) {
-        
-        val bufferSize = 500 // TODO add to con figuration
+      socket.setBroadcast(broadcast)
+      while (listen) {
         
         val receiveBuffer = Array.fill(bufferSize){0.toByte}
         val packet = new DatagramPacket(receiveBuffer, receiveBuffer.length)
@@ -60,7 +84,7 @@ class DataGramSocketListener extends Actor {
           * allocated for receiveBuffer
           */
         if (bufferSize < packet.getLength) { throw new PacketLenghtOutOfBounds }
-        // TODO send back notice to end service and close the connection. Tell scrubber to end
+        // TODO 2 send back notice to end service and close the connection. Tell scrubber to end
         
         /**
           * There is extra bytes in the packet space. We originally designated by bufferSize.
@@ -88,10 +112,10 @@ class DataGramSocketListener extends Actor {
     val results = new StringBuilder
   
     // Split up tokens by white space
-    def requestList = tweet.text.toString.split(" +")
+    def requestList = tweet.text.toString.toLowerCase.split(" +")
   
-    for (word <- requestList if word.length > 3) { // TODO put this length in config
-      if (word.matches("^[a-zA-Z0-9]*$")) // TODO put this in a config
+    for (word <- requestList if word.length > wordLength) {
+      if (word.matches(matchPattern))
         results ++= CouchbaseDatasourceObject.queryDocByString(word.replaceAll("\"", "")).toString
     }
         
@@ -103,12 +127,15 @@ class DataGramSocketListener extends Actor {
   
   def sendResponseToUser(tweet: Tweet, results: StringBuilder) = {
     
-    val responseAPI = new TweetResponseUtility(tweet, Json.parse(results.toString())) // TODO Need to be called once, maybe move to object
-    // TODO we all need a way to handle exceptions if there is denial from Twitter
+    val responseAPI = new TweetResponseUtility(tweet, Json.parse(results.toString()))
   
-    logger.debug(responseAPI.getResponseText(0).toString())
+    logger.info(responseAPI.getResponseText(0).toString())
   
-    if(false) responseAPI.send // TODO add config
+    /**
+      * This will send responses back to twitter from matching tweet id. The
+      * response from couchbase will be the responding message.
+      */
+    if(allowResponses) responseAPI.send
     
     // Clean up StringBuilder so we are not taking up space
     results.clear()

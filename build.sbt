@@ -8,7 +8,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val root = (project in file(".")).
-  enablePlugins(PlayScala, UniversalPlugin, DockerPlugin, PlayAkkaHttpServer).
+  enablePlugins(PlayScala, DockerPlugin, PlayAkkaHttpServer).
   disablePlugins(PlayNettyServer).
   settings(commonSettings: _*).
   settings(
@@ -19,7 +19,8 @@ lazy val root = (project in file(".")).
 
 resolvers ++= Seq(
   "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
-  "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
+  "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
+  "MVN repository" at "http://mvnrepository.com/artifact/com.spotify/docker-client"
 )
 
 libraryDependencies ++= {
@@ -28,20 +29,20 @@ libraryDependencies ++= {
   Seq(
     // -- main library
     "com.couchbase.client".%("java-client")                         % "2.2.7",
-    // -- metrics --
-    "io.dropwizard.metrics".%("metrics-core")                       % "3.1.2",
     // -- package plugin --
     "javax.servlet".%("javax.servlet-api")                          % "3.0.1"         % "provided",
     // -- docker --
     "com.spotify".%("docker-client")                                % "5.0.2",
     // -- twitter --
     "org.twitter4j".%("twitter4j-core")                             % "4.0.5"
-    
+ 
   )
 }
 
 //Settings for docker publish plugin
 dockerExposedPorts := Seq(8135, 8135)
+dockerExposedUdpPorts := Seq(8136, 8136)
+dockerUpdateLatest := true
 
 parallelExecution in run := true
 fork in run := false
